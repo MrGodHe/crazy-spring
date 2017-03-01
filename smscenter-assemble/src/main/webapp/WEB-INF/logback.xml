@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!-- 日志组件启动时，打印调试信息，并监控此文件变化，周期300秒 -->
+<configuration scan="true" scanPeriod="300 seconds" debug="false">
+    <!--针对jul的性能优化 -->
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+    <property resource="log.properties"/>
+
+    <!-- 配置文件，包括此文件内的所有变量的配置 -->
+    <property name="LOG_PATH" value="/var/log/webapps/smscenter"/>
+    <property name="APP_NAME" value="smscenter"/>
+    <property name="LOG_PATTERN"
+              value="%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level [%5.12thread] %X{identify}%logger{0}:%L %msg%n"/>
+    <!-- contextName主要是为了区分在一个web容器下部署多个应用启用jmx时，不会出现混乱 -->
+    <contextName>${APP_NAME}</contextName>
+
+    <!-- ***************************************************************** -->
+    <!-- STDOUT APENDER  配置输出到控制台，仅在开发测试时启用输出到控制台 ，下面的语句在window环境下生效，使用mac或者ubuntu的同学，请自己构造下 -->
+    <!-- ***************************************************************** -->
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+
+    <!-- ***************************************************************** -->
+    <!-- LOGGERS -->
+    <!-- ***************************************************************** -->
+
+    <!-- info级别的日志appender -->
+    <appender name="INFO-APPENDER"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${APP_NAME}-info-60dt.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>
+                ${LOG_PATH}/${APP_NAME}-info-60dt.log.%d{yyyy-MM-dd}.%i
+            </fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10240MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <!-- error级别日志appender -->
+    <appender name="ERROR-APPENDER"
+              class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_PATH}/${APP_NAME}-error-60dt.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>
+                ${LOG_PATH}/${APP_NAME}-error-60dt.log.%d{yyyy-MM-dd}.%i
+            </fileNamePattern>
+            <timeBasedFileNamingAndTriggeringPolicy
+                    class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>10240MB</maxFileSize>
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>ERROR</level>
+        </filter>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+
+    <!-- 异步日志包裹 -->
+    <appender name="ASYNC-INFO-APPENDER" class="com.smscenter.log.LogbackAsyncAppender">
+        <appender-ref ref="INFO-APPENDER"/>
+    </appender>
+    <appender name="ASYNC-ERROR-APPENDER" class="com.smscenter.log.LogbackAsyncAppender">
+        <appender-ref ref="ERROR-APPENDER"/>
+    </appender>
+
+    <logger name="java.sql.Connection" additivity="false" level="debug">
+        <appender-ref ref="ASYNC-INFO-APPENDER"/>
+    </logger>
+    <logger name="java.sql.PreparedStatement" additivity="false" level="debug">
+        <appender-ref ref="ASYNC-INFO-APPENDER"/>
+        <appender-ref ref="STDOUT"/>
+    </logger>
+
+    <logger name="com.smscenter" additivity="false" level="INFO">
+        <appender-ref ref="ASYNC-INFO-APPENDER"/>
+        <appender-ref ref="STDOUT"/>
+        <if condition='property("spring.profiles.active").contains("local")'>
+            <then>
+                <appender-ref ref="STDOUT"/>
+            </then>
+        </if>
+    </logger>
+
+    <!-- 根日志logger -->
+    <root level="info">
+        <appender-ref ref="ASYNC-INFO-APPENDER"/>
+        <appender-ref ref="ASYNC-ERROR-APPENDER"/>
+        <appender-ref ref="STDOUT"/>
+        <if condition='property("spring.profiles.active").contains("local")'>
+            <then>
+                <appender-ref ref="STDOUT"/>
+            </then>
+        </if>
+    </root>
+
+</configuration>

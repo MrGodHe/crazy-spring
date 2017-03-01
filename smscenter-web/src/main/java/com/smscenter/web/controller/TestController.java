@@ -1,27 +1,32 @@
 package com.smscenter.web.controller;
 
-import com.smscenter.dal.dao.UserDao;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMapping;
-
-import javax.annotation.Resource;
+import org.springframework.web.bind.annotation.ResponseBody;
 
 /**
- * @author:Mr.he date: 2016/9/25
+ * @author:Mr.he date: 2017/2/3
  * email:1182501678@qq.com
  */
 @Controller
+@RequestMapping("/test")
 public class TestController {
+    private Logger logger = LoggerFactory.getLogger(getClass());
 
-    @Resource
-    private UserDao userDao;
+    @RequestMapping("/hii")
+    public String test(){
+        System.out.println("======>进入了服务");
+        return "index";
+    }
 
-    @RequestMapping("/index.do")
-    public String jumpPage(){
-
-        System.out.println("----进入controller！");
-        System.out.println( userDao.findAllUsers());
-
-        return "WEB-INF/index.html";
+    @RequestMapping("/say")
+    public @ResponseBody String say(){
+        logger.info("===========记录java 日志组建");
+        String s = "{\"name\":\"测试返回String\"}";
+        System.out.println(s);
+        return "何伟";
     }
 }

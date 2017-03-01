@@ -8,7 +8,7 @@ import java.util.List;
  * @author:Mr.he date: 2016/9/26
  * email:1182501678@qq.com
  */
-public interface UserDao extends BaseDao {
+public interface UserDao{
 
     public List<UserDo> findAllUsers();
 
